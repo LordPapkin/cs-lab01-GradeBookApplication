@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+
 using GradeBook.Enums;
 using System.Collections.Generic;
 using System.IO;
@@ -10,15 +11,14 @@ namespace GradeBook.GradeBooks
 {
     public abstract class BaseGradeBook
     {
-        public string Name { get; set; }
-
         public GradeBookType Type { get; set; }
-
+        public string Name { get; set; }
         public List<Student> Students { get; set; }
-
-        public BaseGradeBook(string name)
+        public bool IsWeighted { get; set; }
+        public BaseGradeBook(string name, bool isWeighted)
         {
             Name = name;
+            IsWeighted = isWeighted;
             Students = new List<Student>();
         }
 
@@ -108,18 +108,26 @@ namespace GradeBook.GradeBooks
 
         public virtual double GetGPA(char letterGrade, StudentType studentType)
         {
+            int gpaBonus = 0;
+            if (IsWeighted)
+            {
+                if (studentType == StudentType.DualEnrolled || studentType == StudentType.Honors)
+                    gpaBonus = 1;
+                else
+                    gpaBonus = 0;
+            }
             switch (letterGrade)
             {
-                case 'A':
-                    return 4;
-                case 'B':
-                    return 3;
-                case 'C':
-                    return 2;
-                case 'D':
-                    return 1;
-                case 'F':
-                    return 0;
+                case 'A':                   
+                    return 4 + gpaBonus;
+                case 'B':                    
+                    return 3 + gpaBonus;
+                case 'C':                    
+                    return 2 + gpaBonus;
+                case 'D':                    
+                    return 1 + gpaBonus;
+                case 'F':                    
+                    return 0 + gpaBonus;
             }
             return 0;
         }
@@ -265,7 +273,7 @@ namespace GradeBook.GradeBooks
                              from type in assembly.GetTypes()
                              where type.FullName == "GradeBook.GradeBooks.StandardGradeBook"
                              select type).FirstOrDefault();
-            
+
             return JsonConvert.DeserializeObject(json, gradebook);
         }
     }
